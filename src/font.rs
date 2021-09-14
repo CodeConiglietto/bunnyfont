@@ -22,9 +22,7 @@ where
         &self.texture
     }
 
-    pub fn new<P>(source_image: B::Texture, char_size: (usize, usize)) -> Result<Self, B::Error>
-    where
-        P: AsRef<Path>,
+    pub fn new(source_image: B::Texture, char_size: (usize, usize)) -> Result<Self, B::Error>
     {
         let (char_width, char_height) = char_size;
 
