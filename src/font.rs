@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use crate::{
     char::BunnyChar,
     traits::{graphics_backend::GraphicsBackend, source_image::SourceImage},
