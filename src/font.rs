@@ -22,15 +22,13 @@ where
         &self.texture
     }
 
-    pub fn new<P>(backend: &mut B, source_image_path: P, char_size: (usize, usize)) -> Result<Self, B::Error>
+    pub fn new<P>(source_image: B::Texture, char_size: (usize, usize)) -> Result<Self, B::Error>
     where
         P: AsRef<Path>,
     {
-        let texture = B::load(backend, source_image_path.as_ref())?;
-
         let (char_width, char_height) = char_size;
 
-        let (texture_width, texture_height) = texture.get_pixel_dimensions();
+        let (texture_width, texture_height) = source_image.get_pixel_dimensions();
 
         assert_eq!(
             texture_width % char_width,
@@ -49,7 +47,7 @@ where
         );
 
         Ok(Self {
-            texture,
+            texture: source_image,
             char_width,
             char_height,
         })
