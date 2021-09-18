@@ -12,8 +12,8 @@ ggez = { version = "0.6.0", optional = true }
 structopt = { version = "0.3.23", optional = true }
 
 [features]
-utilities = ["ggez"]
+utilities = ["ggez", "failure", "structopt"]
 
 [[bin]]
 name = "indexer"
-required-features = ["utilities", "failure", "structopt"]
+required-features = ["utilities"]
