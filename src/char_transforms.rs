@@ -1,5 +1,6 @@
 use std::f32::consts::{PI, FRAC_PI_2, FRAC_PI_4};
 
+#[derive(Clone, Copy)]
 pub enum CharRotation {
     None,
     Rotation90,
@@ -18,6 +19,7 @@ impl CharRotation {
     }
 }
 
+#[derive(Clone, Copy)]
 pub enum CharMirror {
     None,
     MirrorX,

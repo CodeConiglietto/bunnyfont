@@ -3,6 +3,7 @@ use crate::{
     traits::color::Color,
 };
 
+#[derive(Clone, Copy)]
 pub struct BunnyChar<C> {
     pub index: usize,
     pub foreground: C,
