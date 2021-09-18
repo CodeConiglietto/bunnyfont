@@ -1,5 +1,5 @@
 /target
-
+/scripts
 
 # Added by cargo
 #
@@ -7,3 +7,4 @@
 
 #/target
 Cargo.lock
+.dir-locals.el

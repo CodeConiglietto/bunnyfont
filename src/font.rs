@@ -1,29 +1,21 @@
-use crate::{
-    char::BunnyChar,
-    traits::{graphics_backend::GraphicsBackend, source_image::SourceImage},
-};
+use crate::{char::BunnyChar, traits::source_image::SourceImage};
 
-pub struct BunnyFont<B>
-where
-    B: GraphicsBackend,
-{
-    texture: B::Texture,
+pub struct BunnyFont<T> {
+    texture: T,
     char_width: usize,
     char_height: usize,
 }
 
-impl<B> BunnyFont<B>
+impl<T> BunnyFont<T>
 where
-    B: GraphicsBackend,
+    T: SourceImage,
 {
-    pub fn texture(&self) -> &B::Texture {
+    pub fn texture(&self) -> &T {
         &self.texture
     }
 
-    pub fn new(source_image: B::Texture, char_size: (usize, usize)) -> Result<Self, B::Error>
-    {
+    pub fn new(source_image: T, char_size: (usize, usize)) -> Self {
         let (char_width, char_height) = char_size;
-
         let (texture_width, texture_height) = source_image.get_pixel_dimensions();
 
         assert_eq!(
@@ -42,11 +34,17 @@ where
             char_height,
         );
 
-        Ok(Self {
+        Self {
             texture: source_image,
             char_width,
             char_height,
-        })
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        let (texture_width, texture_height) = self.texture.get_pixel_dimensions();
+
+        (texture_width / self.char_width) * (texture_height / self.char_height)
     }
 
     //gets coordinates of a character in a rectangle in (x, y, w, h) format
@@ -68,7 +66,7 @@ where
 
     //Get the color of the pixel at index in (r, g, b, a)
     //index should be a valid index for the font, and x and y should be 0..char_width, 0..char_height
-    pub fn get_char_pixel_at(&self, _char: BunnyChar<B::Color>, _x: usize, _y: usize) -> B::Color {
+    pub fn get_char_pixel_at(&self, _char: BunnyChar<T::Color>, _x: usize, _y: usize) -> T::Color {
         todo!();
     }
 

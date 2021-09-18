@@ -1,20 +1,45 @@
-use failure::Fallible;
 use ggez::{
-    graphics::{spritebatch::SpriteBatch, BlendMode, DrawParam, Drawable, FilterMode, Image, Rect},
+    graphics::{
+        spritebatch::SpriteBatch, BlendMode, Color as GgColor, DrawParam, Drawable, FilterMode,
+        Image, Rect,
+    },
     mint, Context, GameResult,
 };
 
+use crate::{
+    char::BunnyChar,
+    font::BunnyFont,
+    traits::{color::Color, source_image::SourceImage},
+};
+
+pub type GgBunnyFont = BunnyFont<Image>;
+pub type GgBunnyChar = BunnyChar<GgColor>;
+
+impl Color for GgColor {
+    fn new(r: f32, g: f32, b: f32, a: f32) -> Self {
+        GgColor::new(r, g, b, a)
+    }
+}
+
+impl SourceImage for Image {
+    type Color = GgColor;
+
+    fn get_pixel_dimensions(&self) -> (usize, usize) {
+        (self.width().into(), self.height().into())
+    }
+}
+
 pub struct BunnyFontBatch {
-    font: BunnyFont,
+    font: GgBunnyFont,
     fg_batch: SpriteBatch,
     bg_batch: SpriteBatch,
     scaling: f32,
 }
 
 impl BunnyFontBatch {
-    pub fn new(font: BunnyFont, white_image: Image, scaling: f32) -> Self {
-        let mut fg_batch = SpriteBatch::new(font.texture.clone());
-        let mut bg_batch = SpriteBatch::new(white_image);
+    pub fn new(ctx: &mut Context, font: GgBunnyFont, scaling: f32) -> GameResult<Self> {
+        let mut fg_batch = SpriteBatch::new(font.texture().clone());
+        let mut bg_batch = SpriteBatch::new(Image::solid(ctx, 1, GgColor::WHITE)?);
 
         fg_batch.set_filter(FilterMode::Nearest);
         bg_batch.set_filter(FilterMode::Nearest);
@@ -22,12 +47,16 @@ impl BunnyFontBatch {
         fg_batch.set_blend_mode(Some(BlendMode::Alpha));
         bg_batch.set_blend_mode(Some(BlendMode::Alpha));
 
-        Self {
+        Ok(Self {
             fg_batch,
             bg_batch,
             font,
             scaling,
-        }
+        })
+    }
+
+    pub fn font(&self) -> &GgBunnyFont {
+        &self.font
     }
 
     pub fn set_scaling(&mut self, scaling: f32) {
@@ -39,18 +68,18 @@ impl BunnyFontBatch {
     }
 
     pub fn tile_width(&self) -> f32 {
-        self.scaling * self.font.char_width() as f32
+        self.scaling * self.font.char_dimensions().0 as f32
     }
 
     pub fn tile_height(&self) -> f32 {
-        self.scaling * self.font.char_height() as f32
+        self.scaling * self.font.char_dimensions().1 as f32
     }
 
-    pub fn add<P>(&mut self, voxel: &Voxel2, dest: P)
+    pub fn add<P>(&mut self, c: GgBunnyChar, dest: P)
     where
         P: Into<mint::Point2<u32>>,
     {
-        let mirror_scale = voxel.mirror.into_scale();
+        let mirror_scale = c.mirror.into_scale();
         let dest = dest.into();
         let dest = mint::Point2::from([
             dest.x as f32 * self.tile_width(),
@@ -58,28 +87,29 @@ impl BunnyFontBatch {
         ]);
 
         let scale =
-            mint::Vector2::from([mirror_scale.x * self.scaling, mirror_scale.y * self.scaling]);
+            mint::Vector2::from([mirror_scale.0 * self.scaling, mirror_scale.1 * self.scaling]);
         let offset = mint::Point2::from([0.0, 0.0]);
+        let src = self.font.get_src_uvs(c.index);
 
         self.fg_batch.add(
             DrawParam::new()
-                .src(self.font.get_src_rect(voxel.char_offset))
+                .src(Rect::new(src.0, src.1, src.2, src.3))
                 .dest(dest)
-                .rotation(voxel.rotation.into_rotation())
+                .rotation(c.rotation.into_rotation())
                 .scale(scale)
                 .offset(offset)
-                .color(voxel.foreground.into()),
+                .color(c.foreground.into()),
         );
 
-        if let Some(background) = voxel.background {
+        if let Some(background) = c.background {
             self.bg_batch.add(
                 DrawParam::new()
                     .src(Rect::new(0.0, 0.0, 1.0, 1.0))
                     .dest(dest)
-                    .rotation(voxel.rotation.into_rotation())
+                    .rotation(c.rotation.into_rotation())
                     .scale(mint::Vector2::from([
-                        scale.x * self.font.char_width() as f32,
-                        scale.y * self.font.char_height() as f32,
+                        scale.x * self.font.char_dimensions().0 as f32,
+                        scale.y * self.font.char_dimensions().1 as f32,
                     ]))
                     .offset(offset)
                     .color(background.into()),
