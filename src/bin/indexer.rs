@@ -1,12 +1,18 @@
 use std::{fs, path::PathBuf};
 
-use bunnyfont::ggez::{GgBunnyChar, GgBunnyFont, GgBunnyFontBatch};
+use bunnyfont::{
+    char_transforms::{CharMirror, CharRotation},
+    ggez::{GgBunnyChar, GgBunnyFont, GgBunnyFontBatch},
+};
 use failure::Fallible;
 use ggez::{
     conf::WindowMode,
     event::{self, EventHandler},
     graphics::{self, Color, DrawParam, Image, Rect},
-    input::mouse::MouseButton,
+    input::{
+        keyboard::{KeyCode, KeyMods},
+        mouse::MouseButton,
+    },
     Context, ContextBuilder, GameResult,
 };
 use structopt::StructOpt;
@@ -45,6 +51,10 @@ fn main() {
 
 struct Indexer {
     font_batch: GgBunnyFontBatch,
+
+    rotation: CharRotation,
+    mirror: CharMirror,
+
     opts: Opts,
 }
 
@@ -70,6 +80,10 @@ impl Indexer {
                 texture,
                 (opts.char_width, opts.char_height),
             ))?,
+
+            rotation: CharRotation::None,
+            mirror: CharMirror::None,
+
             opts,
         })
     }
@@ -93,9 +107,40 @@ impl EventHandler<ggez::GameError> for Indexer {
         let index = char_y * width + char_x;
 
         println!(
-            "X: {}, Y: {}, Index: 0x{:03X} ({})",
-            char_x, char_y, index, index
+            "X: {}, Y: {}, Index: 0x{:03X} ({}), R: {:?}, M: {:?}",
+            char_x, char_y, index, index, self.rotation, self.mirror,
         );
+    }
+
+    fn key_down_event(
+        &mut self,
+        _ctx: &mut Context,
+        keycode: KeyCode,
+        _keymods: KeyMods,
+        repeat: bool,
+    ) {
+        if repeat {
+            return;
+        }
+
+        match keycode {
+            KeyCode::R => {
+                self.rotation = self.rotation.then(CharRotation::Rotation90);
+                println!("{:?}", self.rotation);
+            }
+
+            KeyCode::X => {
+                self.mirror = self.mirror.then(CharMirror::MirrorX);
+                println!("{:?}", self.mirror);
+            }
+
+            KeyCode::Y => {
+                self.mirror = self.mirror.then(CharMirror::MirrorY);
+                println!("{:?}", self.mirror);
+            }
+
+            _ => {}
+        }
     }
 
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
@@ -110,11 +155,14 @@ impl EventHandler<ggez::GameError> for Indexer {
         let width = self.font_batch.font().charset_dimensions().0;
 
         for index in 0..self.font_batch.font().len() {
-            GgBunnyChar::new(index).draw_to_font_batch(
-                &mut self.font_batch,
-                ((index % width) as i32, (index / width) as i32),
-                self.opts.scaling as f32,
-            );
+            GgBunnyChar::new(index)
+                .rotation(self.rotation)
+                .mirror(self.mirror)
+                .draw_to_font_batch(
+                    &mut self.font_batch,
+                    ((index % width) as i32, (index / width) as i32),
+                    self.opts.scaling as f32,
+                );
         }
 
         graphics::draw(ctx, &self.font_batch, DrawParam::default())?;

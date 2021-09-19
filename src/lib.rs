@@ -1,4 +1,4 @@
-#[cfg(feature = "ggez")]
+#[cfg(feature = "ggez-integration")]
 pub mod ggez;
 
 pub mod char;

@@ -5,9 +5,11 @@ use ggez::{
     },
     mint, Context, GameResult,
 };
+use glam::f32::{mat2, vec2, Affine2};
 
 use crate::{
     char::BunnyChar,
+    char_transforms::{CharMirror, CharRotation},
     font::BunnyFont,
     traits::{color::Color, source_image::SourceImage},
 };
@@ -26,6 +28,46 @@ impl SourceImage for Image {
 
     fn get_pixel_dimensions(&self) -> (usize, usize) {
         (self.width().into(), self.height().into())
+    }
+}
+
+impl CharRotation {
+    pub fn to_transform(&self) -> Affine2 {
+        match self {
+            Self::None => Affine2::IDENTITY,
+            Self::Rotation90 => Affine2::from_mat2_translation(
+                mat2(vec2(0.0, 1.0), vec2(-1.0, 0.0)),
+                vec2(1.0, 0.0),
+            ),
+            Self::Rotation180 => Affine2::from_mat2_translation(
+                mat2(vec2(-1.0, 0.0), vec2(0.0, -1.0)),
+                vec2(1.0, 1.0),
+            ),
+            Self::Rotation270 => Affine2::from_mat2_translation(
+                mat2(vec2(0.0, -1.0), vec2(1.0, 0.0)),
+                vec2(0.0, 1.0),
+            ),
+        }
+    }
+}
+
+impl CharMirror {
+    pub fn to_transform(&self) -> Affine2 {
+        match self {
+            Self::None => Affine2::IDENTITY,
+            Self::MirrorX => Affine2::from_mat2_translation(
+                mat2(vec2(-1.0, 0.0), vec2(0.0, 1.0)),
+                vec2(1.0, 0.0),
+            ),
+            Self::MirrorY => Affine2::from_mat2_translation(
+                mat2(vec2(1.0, 0.0), vec2(0.0, -1.0)),
+                vec2(0.0, 1.0),
+            ),
+            Self::MirrorBoth => Affine2::from_mat2_translation(
+                mat2(vec2(-1.0, 0.0), vec2(0.0, -1.0)),
+                vec2(1.0, 1.0),
+            ),
+        }
     }
 }
 
@@ -64,29 +106,37 @@ const BACKGROUND_CHAR_INDEX: usize = 0x2c7;
 
 impl GgBunnyChar {
     pub fn draw_to_font_batch(&self, batch: &mut GgBunnyFontBatch, dest: (i32, i32), scaling: f32) {
-        let mirror_scale = self.mirror.into_scale();
         let (dest_x, dest_y) = dest;
-        let (tile_width, tile_height) = batch.tile_size(scaling);
+        let (char_width, char_height) = batch.font.char_dimensions();
 
-        let dest = mint::Point2::from([dest_x as f32 * tile_width, dest_y as f32 * tile_height]);
+        let rotation = self.rotation.to_transform();
+        let mirror = self.mirror.to_transform();
+        let translation = Affine2::from_translation(vec2(dest_x as f32, dest_y as f32));
+        let scaling = Affine2::from_scale(vec2(
+            scaling * char_width as f32,
+            scaling * char_height as f32,
+        ));
 
-        let scale = mint::Vector2::from([mirror_scale.0 * scaling, mirror_scale.1 * scaling]);
-        let offset = mint::Point2::from([0.0, 0.0]);
+        let transform = scaling * translation * mirror * rotation;
+
+        let transform_arr = transform.to_cols_array_2d();
+        let transform_homogeneous = mint::ColumnMatrix4::from([
+            [transform_arr[0][0], transform_arr[0][1], 0.0, 0.0],
+            [transform_arr[1][0], transform_arr[1][1], 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [transform_arr[2][0], transform_arr[2][1], 0.0, 1.0],
+        ]);
+
         let (src_x, src_y, src_w, src_h) = batch.font.get_src_uvs(self.index);
-        let (bg_src_x, bg_src_y, bg_src_w, bg_src_h) =
-            batch.font.get_src_uvs(BACKGROUND_CHAR_INDEX);
 
         if let Some(background) = self.background {
+            let (bg_src_x, bg_src_y, bg_src_w, bg_src_h) =
+                batch.font.get_src_uvs(BACKGROUND_CHAR_INDEX);
+
             batch.batch.add(
                 DrawParam::new()
                     .src(Rect::new(bg_src_x, bg_src_y, bg_src_w, bg_src_h))
-                    .dest(dest)
-                    .rotation(self.rotation.into_rotation())
-                    .scale(mint::Vector2::from([
-                        scale.x * batch.font.char_dimensions().0 as f32,
-                        scale.y * batch.font.char_dimensions().1 as f32,
-                    ]))
-                    .offset(offset)
+                    .transform(transform_homogeneous)
                     .color(background.into()),
             );
         }
@@ -94,10 +144,7 @@ impl GgBunnyChar {
         batch.batch.add(
             DrawParam::new()
                 .src(Rect::new(src_x, src_y, src_w, src_h))
-                .dest(dest)
-                .rotation(self.rotation.into_rotation())
-                .scale(scale)
-                .offset(offset)
+                .transform(transform_homogeneous)
                 .color(self.foreground.into()),
         );
     }
