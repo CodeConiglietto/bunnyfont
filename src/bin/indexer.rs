@@ -1,6 +1,6 @@
 use std::{fs, path::PathBuf};
 
-use bunnyfont::ggez::{BunnyFontBatch, GgBunnyChar, GgBunnyFont};
+use bunnyfont::ggez::{GgBunnyChar, GgBunnyFont, GgBunnyFontBatch};
 use failure::Fallible;
 use ggez::{
     conf::WindowMode,
@@ -44,7 +44,8 @@ fn main() {
 }
 
 struct Indexer {
-    font_batch: BunnyFontBatch,
+    font_batch: GgBunnyFontBatch,
+    opts: Opts,
 }
 
 impl Indexer {
@@ -65,11 +66,11 @@ impl Indexer {
         graphics::set_screen_coordinates(ctx, Rect::new(0.0, 0.0, width, height))?;
 
         Ok(Indexer {
-            font_batch: BunnyFontBatch::new(
-                ctx,
-                GgBunnyFont::new(texture, (opts.char_width, opts.char_height)),
-                opts.scaling as f32,
-            )?,
+            font_batch: GgBunnyFontBatch::new(GgBunnyFont::new(
+                texture,
+                (opts.char_width, opts.char_height),
+            ))?,
+            opts,
         })
     }
 }
@@ -82,8 +83,10 @@ impl EventHandler<ggez::GameError> for Indexer {
         x: f32,
         y: f32,
     ) {
-        let char_x = (x / self.font_batch.tile_width()).floor() as usize;
-        let char_y = (y / self.font_batch.tile_height()).floor() as usize;
+        let (tile_width, tile_height) = self.font_batch.tile_size(self.opts.scaling as f32);
+
+        let char_x = (x / tile_width).floor() as usize;
+        let char_y = (y / tile_height).floor() as usize;
 
         let width = self.font_batch.font().charset_dimensions().0;
 
@@ -107,9 +110,10 @@ impl EventHandler<ggez::GameError> for Indexer {
         let width = self.font_batch.font().charset_dimensions().0;
 
         for index in 0..self.font_batch.font().len() {
-            self.font_batch.add(
-                GgBunnyChar::new(index),
-                [(index % width) as u32, (index / width) as u32],
+            GgBunnyChar::new(index).draw_to_font_batch(
+                &mut self.font_batch,
+                ((index % width) as i32, (index / width) as i32),
+                self.opts.scaling as f32,
             );
         }
 
