@@ -107,7 +107,7 @@ impl EventHandler<ggez::GameError> for Indexer {
         let index = char_y * width + char_x;
 
         println!(
-            "X: {}, Y: {}, Index: 0x{:03X} ({}), R: {:?}, M: {:?}",
+            "X: {}, Y: {}, Index: {:#05X} ({}), R: {:?}, M: {:?}",
             char_x, char_y, index, index, self.rotation, self.mirror,
         );
     }
