@@ -20,13 +20,13 @@ impl<C> BunnyChar<C>
 where
     C: Color,
 {
-    pub fn new(index: usize) -> Self {
+    pub fn new(index: usize, foreground: C, background: Option<C>, rotation: CharRotation, mirror: CharMirror) -> Self {
         Self {
             index,
-            foreground: Color::new(1.0, 1.0, 1.0, 1.0),
-            background: None,
-            rotation: CharRotation::None,
-            mirror: CharMirror::None,
+            foreground,
+            background,
+            rotation,
+            mirror,
         }
     }
 
@@ -44,14 +44,5 @@ where
 
     pub fn mirror(self, mirror: CharMirror) -> Self {
         Self { mirror, ..self }
-    }
-}
-
-impl<C> Default for BunnyChar<C>
-where
-    C: Color,
-{
-    fn default() -> Self {
-        Self::new(0)
     }
 }

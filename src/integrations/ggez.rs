@@ -1,7 +1,7 @@
 use ggez::{
     graphics::{
         spritebatch::SpriteBatch, BlendMode, Color as GgColor, DrawParam, Drawable, FilterMode,
-        Image, Rect,
+        Image as GgImage, Rect,
     },
     mint, Context, GameResult,
 };
@@ -14,16 +14,12 @@ use crate::{
     traits::{color::Color, source_image::SourceImage},
 };
 
-pub type GgBunnyFont = BunnyFont<Image>;
+pub type GgBunnyFont = BunnyFont<GgImage>;
 pub type GgBunnyChar = BunnyChar<GgColor>;
 
-impl Color for GgColor {
-    fn new(r: f32, g: f32, b: f32, a: f32) -> Self {
-        GgColor::new(r, g, b, a)
-    }
-}
+impl Color for GgColor {}
 
-impl SourceImage for Image {
+impl SourceImage for GgImage {
     type Color = GgColor;
 
     fn get_pixel_dimensions(&self) -> (usize, usize) {

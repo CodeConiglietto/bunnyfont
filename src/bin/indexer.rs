@@ -2,13 +2,13 @@ use std::{fs, path::PathBuf};
 
 use bunnyfont::{
     char_transforms::{CharMirror, CharRotation},
-    ggez::{GgBunnyChar, GgBunnyFont, GgBunnyFontBatch},
+    integrations::ggez::{GgBunnyChar, GgBunnyFont, GgBunnyFontBatch},
 };
 use failure::Fallible;
 use ggez::{
     conf::WindowMode,
     event::{self, EventHandler},
-    graphics::{self, Color, DrawParam, Image, Rect},
+    graphics::{self, Color as GgColor, DrawParam, Image, Rect},
     input::{
         keyboard::{KeyCode, KeyMods},
         mouse::MouseButton,
@@ -61,7 +61,7 @@ struct Indexer {
 impl Indexer {
     pub fn new(ctx: &mut Context, opts: Opts) -> Fallible<Indexer> {
         let texture = Image::from_bytes(ctx, &fs::read(&opts.font_path)?)?;
-
+ 
         let width = texture.width() as f32 * opts.scaling as f32;
         let height = texture.height() as f32 * opts.scaling as f32;
 
@@ -148,16 +148,14 @@ impl EventHandler<ggez::GameError> for Indexer {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        graphics::clear(ctx, Color::BLACK);
+        graphics::clear(ctx, GgColor::BLACK);
 
         self.font_batch.clear();
 
         let width = self.font_batch.font().charset_dimensions().0;
 
         for index in 0..self.font_batch.font().len() {
-            GgBunnyChar::new(index)
-                .rotation(self.rotation)
-                .mirror(self.mirror)
+            GgBunnyChar::new(index, GgColor::WHITE, None, self.rotation, self.mirror)
                 .draw_to_font_batch(
                     &mut self.font_batch,
                     ((index % width) as i32, (index / width) as i32),
