@@ -38,9 +38,14 @@ impl Lerpable for Rgba<u8> {
 
 impl IntoScalar for Rgba<u8> {
     fn into_scalar(&self) -> f32 {
-        self.0[0] as f32 / 256.0 +
+        let scalar = self.0[0] as f32 / 256.0 +
         self.0[1] as f32 / 256.0 +
         self.0[2] as f32 / 256.0 +
-        self.0[3] as f32 / 256.0
+        self.0[3] as f32 / 256.0;
+
+        assert!(scalar >= 0.0);
+        assert!(scalar <= 1.0);
+
+        scalar
     }
 }
