@@ -30,6 +30,10 @@ where
         }
     }
 
+    pub fn index(self, index: usize) -> Self {
+        Self { index, ..self }
+    }
+
     pub fn foreground(self, foreground: C) -> Self {
         Self { foreground, ..self }
     }
