@@ -43,8 +43,7 @@ impl IntoScalar for Rgba<u8> {
         self.0[2] as f32 / 256.0 +
         self.0[3] as f32 / 256.0;
 
-        assert!(scalar >= 0.0);
-        assert!(scalar <= 1.0);
+        assert!(scalar >= 0.0 && scalar <= 1.0, "scalar is not within range 0.0..=1.0, value was {}", scalar);
 
         scalar
     }
