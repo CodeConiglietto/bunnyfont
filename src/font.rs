@@ -91,6 +91,16 @@ where
             texture_height / self.char_height,
         )
     }
+
+    pub fn total_char_indices(&self) -> usize {
+        let (charset_width, charset_height) = self.charset_dimensions();
+
+        charset_width * charset_height
+    }
+
+    pub fn highest_char_index(&self) -> usize {
+        self.total_char_indices() - 1
+    }
 }
 
 impl <T> BunnyFont<T> 
