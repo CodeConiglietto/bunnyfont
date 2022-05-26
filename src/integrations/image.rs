@@ -28,23 +28,20 @@ impl PixelIndexable<Rgba<u8>> for RgbaImage {
 impl Lerpable for Rgba<u8> {
     fn lerp(a: &Self, b: &Self, scalar: f32) -> Self {
         [
-            (a.0[0] as f32 * (1.0 - scalar) + b.0[0] as f32 * scalar) as u8,
-            (a.0[1] as f32 * (1.0 - scalar) + b.0[1] as f32 * scalar) as u8,
-            (a.0[2] as f32 * (1.0 - scalar) + b.0[2] as f32 * scalar) as u8,
-            (a.0[3] as f32 * (1.0 - scalar) + b.0[3] as f32 * scalar) as u8,
+            (a.0[0] as f32 * scalar + b.0[0] as f32 * (1.0 - scalar)) as u8,
+            (a.0[1] as f32 * scalar + b.0[1] as f32 * (1.0 - scalar)) as u8,
+            (a.0[2] as f32 * scalar + b.0[2] as f32 * (1.0 - scalar)) as u8,
+            (a.0[3] as f32 * scalar + b.0[3] as f32 * (1.0 - scalar)) as u8,
         ].into()
     }
 }
 
 impl IntoScalar for Rgba<u8> {
     fn into_scalar(&self) -> f32 {
-        let scalar = 
-        // (self.0[0] as f32 / 256.0 +
-        // self.0[1] as f32 / 256.0 +
-        // self.0[2] as f32 / 256.0 +
-        self.0[3] as f32 / 256.0
-        ;
-    // ) / 4.0;
+        let scalar = (self.0[0] as f32 / 256.0 +
+        self.0[1] as f32 / 256.0 +
+        self.0[2] as f32 / 256.0 +
+        self.0[3] as f32 / 256.0) / 4.0;
 
         assert!(scalar >= 0.0 && scalar <= 1.0, "scalar is not within range 0.0..=1.0, value was {}", scalar);
 
