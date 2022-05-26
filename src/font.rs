@@ -1,6 +1,7 @@
 use crate::traits::into_scalar::IntoScalar;
 use crate::traits::lerpable::Lerpable;
 use crate::traits::pixel_indexable::PixelIndexable;
+use crate::char_transforms::{CharMirror, CharRotation};
 use crate::{char::BunnyChar, traits::source_image::SourceImage};
 
 pub struct BunnyFont<T> {
@@ -113,6 +114,25 @@ impl <T> BunnyFont<T>
 
         assert!(x < char_width);
         assert!(y < char_height);
+
+        let (rot_cw, rot_ch) = (char_width - 1, char_height - 1);
+        let (x_inv, y_inv) = (x - rot_cw, y - rot_ch);
+
+        let (x, y) = match bunny_char.rotation {
+            CharRotation::None => (x, y),
+            CharRotation::Rotation90 => (y_inv, x),
+            CharRotation::Rotation180 => (x_inv, y_inv),
+            CharRotation::Rotation270 => (y, x_inv),
+        };
+
+        let (x, y) = match bunny_char.mirror {
+            CharMirror::None => (x, y),
+            CharMirror::MirrorX => (x_inv, y),
+            CharMirror::MirrorY => (x, y_inv),
+            CharMirror::MirrorBoth => (x_inv, y_inv),
+        };
+
+        assert!(x < char_width && y < char_height, "char coordinates are out of bounds for char, this may be caused by rotating a non-square char");
 
         let (char_pix_x, char_pix_y) = (x + char_x * char_width, y + char_y * char_height);
 
