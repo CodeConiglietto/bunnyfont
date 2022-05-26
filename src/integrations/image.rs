@@ -2,7 +2,6 @@ use image::{RgbaImage, Rgba};
 
 use crate::{
     char::BunnyChar,
-    char_transforms::{CharMirror, CharRotation},
     font::BunnyFont,
     traits::{color::Color, pixel_indexable::PixelIndexable, source_image::SourceImage},
 };

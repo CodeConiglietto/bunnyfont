@@ -107,9 +107,12 @@ impl <T> BunnyFont<T>
     where T: SourceImage + PixelIndexable<T::Color>,
         T::Color: Lerpable + IntoScalar
 {
-    fn get_char_pixel(&self, bunny_char: &BunnyChar<T::Color>, x: usize, y: usize) -> T::Color {
+    pub fn char_pixel(&self, bunny_char: &BunnyChar<T::Color>, x: usize, y: usize) -> T::Color {
         let (char_x, char_y) = self.get_char_pos_from_index(bunny_char.index);
         let (char_width, char_height) = self.char_dimensions();
+
+        assert!(x < char_width);
+        assert!(y < char_height);
 
         let (char_pix_x, char_pix_y) = (x + char_x * char_width, y + char_y * char_height);
 
