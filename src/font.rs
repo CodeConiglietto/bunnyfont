@@ -116,7 +116,7 @@ impl <T> BunnyFont<T>
         assert!(y < char_height);
 
         let (rot_cw, rot_ch) = (char_width - 1, char_height - 1);
-        let (x_inv, y_inv) = (x - rot_cw, y - rot_ch);
+        let (x_inv, y_inv) = (rot_cw - x, rot_ch - y);
 
         let (x, y) = match bunny_char.rotation {
             CharRotation::None => (x, y),
