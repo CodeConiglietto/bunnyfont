@@ -28,10 +28,10 @@ impl PixelIndexable<Rgba<u8>> for RgbaImage {
 impl Lerpable for Rgba<u8> {
     fn lerp(a: &Self, b: &Self, scalar: f32) -> Self {
         [
-            (a.0[0] as f32 * scalar + b.0[0] as f32 * (1.0 - scalar)) as u8,
-            (a.0[1] as f32 * scalar + b.0[1] as f32 * (1.0 - scalar)) as u8,
-            (a.0[2] as f32 * scalar + b.0[2] as f32 * (1.0 - scalar)) as u8,
-            (a.0[3] as f32 * scalar + b.0[3] as f32 * (1.0 - scalar)) as u8,
+            (a.0[0] as f32 * (1.0 - scalar) + b.0[0] as f32 * scalar) as u8,
+            (a.0[1] as f32 * (1.0 - scalar) + b.0[1] as f32 * scalar) as u8,
+            (a.0[2] as f32 * (1.0 - scalar) + b.0[2] as f32 * scalar) as u8,
+            (a.0[3] as f32 * (1.0 - scalar) + b.0[3] as f32 * scalar) as u8,
         ].into()
     }
 }
